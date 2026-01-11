@@ -1,0 +1,69 @@
+---
+strategy: polling
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+polling_url: "https://api.open-meteo.com/v1/forecast?latitude={{latitude}}&longitude={{longitude}}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,visibility,cloud_cover&hourly=precipitation_probability,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,snowfall_sum,daylight_duration&temperature_unit={{temperature_unit}}&wind_speed_unit={{wind_speed_unit}}&timezone=auto&forecast_days=9\r\nhttps://air-quality-api.open-meteo.com/v1/air-quality?latitude={{latitude}}&longitude={{longitude}}&current=us_aqi,european_aqi,pm10,pm2_5&timezone=auto"
+polling_headers: ''
+polling_body: ''
+id: 214872
+custom_fields:
+- name: About this plugin
+  keyname: author_bio
+  field_type: author_bio
+  description: Yet another weather dashboard! The current weather and the forecast of the coming days. For the extra nerdy ones, multiple datapoints are visible that has to do with the current weather. Like windspeed, wind direction, chance of rain, visibility and more. Questions or wishes? Email me.
+  email_address: trmnl@achtnegen.nl
+- keyname: location
+  name: Location
+  field_type: string
+  default: ''
+- keyname: latitude
+  name: Latitude
+  field_type: string
+  default: ''
+  help_text: Use <a href="https://www.gps-coordinates.net/" target="_blank">GPS Coordinates website</a> to find your Latitude
+- keyname: longitude
+  name: Longitude
+  field_type: string
+  default: ''
+  help_text: Use <a href="https://www.gps-coordinates.net/" target="_blank">GPS Coordinates website</a> to find your Longitude
+- keyname: temperature_unit
+  name: Temperature Unit
+  field_type: select
+  default: celsius
+  options:
+  - Celsius (°C): celsius
+  - Fahrenheit (°F): fahrenheit
+- keyname: wind_speed_unit
+  name: Wind Speed Unit
+  field_type: select
+  default: kmh
+  options:
+  - km/h: kmh
+  - m/s: ms
+  - mph: mph
+  - Knots: kn
+- keyname: distance_unit
+  name: Distance Unit
+  field_type: select
+  default: km
+  options:
+  - Kilometers (km): km
+  - Miles (mi): mi
+- keyname: time_format
+  name: Time Format
+  field_type: select
+  default: 24h
+  options:
+  - 24-hour (13:45): 24h
+  - 12-hour (1:45 PM): 12h
+- keyname: aqi_type
+  name: Air Quality Index Type
+  field_type: select
+  default: us_aqi
+  options:
+  - US AQI: us_aqi
+  - European AQI: european_aqi
+name: Extended Weather Dashboard
+refresh_interval: 60

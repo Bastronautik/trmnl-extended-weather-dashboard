@@ -1,0 +1,177 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+<style>
+    .layout {
+    font-family: "Google Sans Flex", sans-serif;
+    font-style: normal;
+  }
+  .outline {outline: 1px solid black;}
+  .material-symbols-outlined--large { font-size: 1.8em; }
+</style>
+{%- comment -%} === SYSTEM & USER DATA === {%- endcomment -%}
+{% assign utc = trmnl.system.timestamp_utc %}
+{% assign offset = trmnl.user.utc_offset %}
+{% assign local_timestamp = utc | plus: offset %}
+{% assign current_time = local_timestamp | date: "%H:%M" %}
+
+{%- comment -%} === USER SETTINGS === {%- endcomment -%}
+{% assign location = trmnl.plugin_settings.custom_fields_values.location | default: "Home" %}
+{% assign color_mode = trmnl.plugin_settings.custom_fields_values.color_mode | default: "dark" %}
+{% assign aqi_type = trmnl.plugin_settings.custom_fields_values.aqi_type | default: "us_aqi" %}
+{% assign temp_unit = trmnl.plugin_settings.custom_fields_values.temperature_unit | default: "celsius" %}
+{% assign wind_unit = trmnl.plugin_settings.custom_fields_values.wind_speed_unit | default: "kmh" %}
+
+{%- comment -%} === WEATHER DATA (IDX_0) === {%- endcomment -%}
+{% assign current = IDX_0.current %}
+{% assign hourly = IDX_0.hourly %}
+{% assign daily = IDX_0.daily %}
+
+{%- comment -%} Current Weather {%- endcomment -%}
+{% assign current_temp = current.temperature_2m | round %}
+{% assign current_weather_code = current.weather_code %}
+{% assign apparent_temp = current.apparent_temperature | round %}
+{% assign humidity = current.relative_humidity_2m %}
+{% assign wind_speed = current.wind_speed_10m | round %}
+{% assign wind_direction = current.wind_direction_10m %}
+{% assign pressure = current.surface_pressure | round %}
+{% assign cloud_cover = current.cloud_cover %}
+
+{%- comment -%} Today's Min/Max {%- endcomment -%}
+{% assign today_max = daily.temperature_2m_max[0] | round %}
+{% assign today_min = daily.temperature_2m_min[0] | round %}
+
+{%- comment -%} Current Hour Index (voor precipitation probability & UV) {%- endcomment -%}
+{% assign current_hour = local_timestamp | date: "%H" | plus: 0 %}
+{% assign precipitation_chance = hourly.precipitation_probability[current_hour] | default: 0 %}
+{% assign current_uv = hourly.uv_index[current_hour] | round: 1 %}
+
+{%- comment -%} === AIR QUALITY DATA (IDX_1) === {%- endcomment -%}
+{% assign aq_current = IDX_1.current %}
+
+{% assign pm25 = aq_current.pm2_5 | round: 1 %}
+{% assign pm10 = aq_current.pm10 | round: 1 %}
+{% assign us_aqi = aq_current.us_aqi %}
+{% assign eu_aqi = aq_current.european_aqi %}
+
+{%- comment -%} Selected AQI based on user preference {%- endcomment -%}
+{% if aqi_type == "us_aqi" %}
+  {% assign selected_aqi = us_aqi %}
+  {% assign aqi_label = "US AQI" %}
+{% else %}
+  {% assign selected_aqi = eu_aqi %}
+  {% assign aqi_label = "EU AQI" %}
+{% endif %}
+
+{%- comment -%} === 5-DAY FORECAST (skip today, use day 1-5) === {%- endcomment -%}
+{% assign forecast_days = daily.time %}
+{% assign forecast_codes = daily.weather_code %}
+{% assign forecast_max = daily.temperature_2m_max %}
+{% assign forecast_min = daily.temperature_2m_min %}
+
+{%- comment -%} Time format preference {%- endcomment -%}
+{% assign time_format = trmnl.plugin_settings.custom_fields_values.time_format | default: "24h" %}
+
+{%- comment -%} Current time {%- endcomment -%}
+{% if time_format == "12h" %}
+  {% assign current_time = local_timestamp | date: "%I:%M %p" %}
+{% else %}
+  {% assign current_time = local_timestamp | date: "%H:%M" %}
+{% endif %}
+
+{%- comment -%} Sunrise & Sunset {%- endcomment -%}
+{% if time_format == "12h" %}
+  {% assign sunrise_time = daily.sunrise[0] | date: "%I:%M" %}
+  {% assign sunset_time = daily.sunset[0] | date: "%I:%M" %}
+{% else %}
+  {% assign sunrise_time = daily.sunrise[0] | date: "%H:%M" %}
+  {% assign sunset_time = daily.sunset[0] | date: "%H:%M" %}
+{% endif %}
+
+{%- comment -%} Distance unit preference {%- endcomment -%}
+{% assign distance_unit = trmnl.plugin_settings.custom_fields_values.distance_unit | default: "km" %}
+
+{%- comment -%} Visibility conversion {%- endcomment -%}
+{% if distance_unit == "mi" %}
+  {% assign visibility = current.visibility | divided_by: 1609.34 | round: 1 %}
+  {% assign visibility_label = "mi" %}
+{% else %}
+  {% assign visibility = current.visibility | divided_by: 1000.0 | round: 1 %}
+  {% assign visibility_label = "km" %}
+{% endif %}
+
+{%- comment -%} Snowfall today with unit conversion {%- endcomment -%}
+{% if distance_unit == "mi" %}
+  {% assign snowfall_today = daily.snowfall_sum[0] | divided_by: 2.54 | round: 1 %}
+  {% assign snow_label = "in" %}
+{% else %}
+  {% assign snowfall_today = daily.snowfall_sum[0] | round: 1 %}
+  {% assign snow_label = "cm" %}
+{% endif %}
+
+{%- comment -%} Daylight Duration (hours and minutes) {%- endcomment -%}
+{% assign daylight_seconds = daily.daylight_duration[0] %}
+{% assign daylight_hours = daylight_seconds | divided_by: 3600 %}
+
+{%- comment -%} Calculate remaining seconds by subtracting hours * 3600 {%- endcomment -%}
+{%- comment -%} Daylight Duration {%- endcomment -%}
+{% assign daylight_seconds = daily.daylight_duration[0] %}
+{% assign daylight_hours = daylight_seconds | divided_by: 3600.0 | round: 1 %}
+{% assign daylight_display = daylight_hours | append: "h" %}
+
+{%- comment -%} Weather Description Mapper {%- endcomment -%}
+{% assign weather_desc = "" %}
+{% case current_weather_code %}
+  {% when 0 %}
+    {% assign weather_desc = "Clear sky" %}
+  {% when 1 %}
+    {% assign weather_desc = "Mainly clear" %}
+  {% when 2 %}
+    {% assign weather_desc = "Partly cloudy" %}
+  {% when 3 %}
+    {% assign weather_desc = "Overcast" %}
+  {% when 45, 48 %}
+    {% assign weather_desc = "Foggy" %}
+  {% when 51 %}
+    {% assign weather_desc = "Light drizzle" %}
+  {% when 53 %}
+    {% assign weather_desc = "Moderate drizzle" %}
+  {% when 55 %}
+    {% assign weather_desc = "Dense drizzle" %}
+  {% when 56, 57 %}
+    {% assign weather_desc = "Freezing drizzle" %}
+  {% when 61 %}
+    {% assign weather_desc = "Slight rain" %}
+  {% when 63 %}
+    {% assign weather_desc = "Moderate rain" %}
+  {% when 65 %}
+    {% assign weather_desc = "Heavy rain" %}
+  {% when 66, 67 %}
+    {% assign weather_desc = "Freezing rain" %}
+  {% when 71 %}
+    {% assign weather_desc = "Slight snow" %}
+  {% when 73 %}
+    {% assign weather_desc = "Moderate snow" %}
+  {% when 75 %}
+    {% assign weather_desc = "Heavy snow" %}
+  {% when 77 %}
+    {% assign weather_desc = "Snow grains" %}
+  {% when 80 %}
+    {% assign weather_desc = "Slight rain showers" %}
+  {% when 81 %}
+    {% assign weather_desc = "Moderate rain showers" %}
+  {% when 82 %}
+    {% assign weather_desc = "Violent rain showers" %}
+  {% when 85 %}
+    {% assign weather_desc = "Slight snow showers" %}
+  {% when 86 %}
+    {% assign weather_desc = "Heavy snow showers" %}
+  {% when 95 %}
+    {% assign weather_desc = "Thunderstorm" %}
+  {% when 96, 99 %}
+    {% assign weather_desc = "Thunderstorm with hail" %}
+  {% else %}
+    {% assign weather_desc = "Unknown" %}
+{% endcase %}
