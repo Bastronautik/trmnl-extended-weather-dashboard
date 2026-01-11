@@ -2,6 +2,10 @@
 
 A comprehensive weather dashboard plugin for [TRMNL](https://usetrmnl.com/) that displays current conditions, 8-day forecast, and detailed meteorological data on your e-ink display.
 
+<a href="https://usetrmnl.com/recipes/214872">
+  <img src="https://usetrmnl.com/images/brand/badges/dark/show-it-on-trmnl/trmnl-badge-show-it-on-dark.svg" alt="TRMNL Badge" width="120">
+</a>
+
 ## Features
 
 ### Current Weather
